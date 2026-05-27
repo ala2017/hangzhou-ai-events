@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>杭州AI活动日历</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --card-bg: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #555;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --border: #e5e7eb;
+    --tag-bg: #eff6ff;
+    --tag-text: #1d4ed8;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.08);
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0 16px 60px;
+  }
+
+  .container { max-width: 800px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header .subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .update-info {
+    text-align: center;
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 28px;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 12px 20px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .stat-num {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .month-section { margin-bottom: 28px; }
+
+  .month-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    padding-left: 8px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .event-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    transition: box-shadow 0.2s, transform 0.2s;
+    border: 1px solid var(--border);
+  }
+
+  .event-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+  }
+
+  .event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .event-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111;
+    flex: 1;
+  }
+
+  .event-date {
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--accent);
+    padding: 3px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .event-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .event-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .event-desc {
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 10px;
+  }
+
+  .event-org {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 8px;
+  }
+
+  .event-link {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 4px 12px;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .event-link:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--tag-text);
+    background: var(--tag-bg);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-right: 4px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+  }
+
+  footer {
+    text-align: center;
+    padding: 32px 0;
+    color: #aaa;
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 22px; }
+    .event-card { padding: 14px 16px; }
+    .event-name { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>杭州AI活动日历</h1>
+  <p class="subtitle">杭州人工智能线下活动一览 · 持续更新</p>
+</header>
+
+<div class="update-info">更新于 2026年5月27日</div>
+
+<div class="stats">
+  <div class="stat-item">
+    <div class="stat-num">12</div>
+    <div class="stat-label">即将举办的活动</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">5</div>
+    <div class="stat-label">个月覆盖面</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">4</div>
+    <div class="stat-label">区域覆盖</div>
+  </div>
+</div>
+
+<!-- ========== 5月 ========== -->
+<div class="month-section">
+  <div class="month-title">2026年5月</div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">阿里国际站AI外贸峰会（内转外、OPC、创业者专场）</div>
+      <div class="event-date">5月28日（周三）</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 滨江区 · 阿里巴巴滨江园区</span>
+      <span><span class="tag">AI+外贸</span></span>
+    </div>
+    <div class="event-desc">阿里国际站主办的AI外贸专场，聚焦内贸转外贸、OPC运营优化，面向创业者群体。</div>
+    <div class="event-org">主办：阿里国际站</div>
+    <a class="event-link" href="https://6114196466247.huodongxing.com/event/8861473312000" target="_blank" rel="noopener">报名链接 →</a>
+  </div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">2026网易创新企业大会 · AI Agent驱动企业生产力跃迁</div>
+      <div class="event-date">5月29日（周四）</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 余杭区 · 良渚洲际酒店</span>
+      <span><span class="tag">AI Agent</span><span class="tag">企业应用</span></span>
+    </div>
+    <div class="event-desc">千人级大会，主论坛聚焦AI Agent如何让AI真正"上岗"。下午设AI+Coding、AI+新消费、AI+国央企、AI+金融、AI+制造、AI+游戏、AI+智能硬件七大分论坛。现场可体验12+场景化Agent演示。</div>
+    <div class="event-org">主办：网易智企</div>
+    <a class="event-link" href="https://cs.huodongxing.com/event/5856609153900" target="_blank" rel="noopener">报名链接 →</a>
+  </div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">2026全国服务消费季 × "味美浙江"餐饮消费欢乐市集（含AI科技展区）</div>
+      <div class="event-date">5月29日 – 6月3日</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 拱墅区 · 武林广场</span>
+      <span><span class="tag">AI体验</span><span class="tag">消费展</span></span>
+    </div>
+    <div class="event-desc">美食市集+科技潮品展示，现场可体验AI人机围棋、按摩机器人、智能康复外骨骼机器人等。</div>
+    <div class="event-org">主办：浙江省商务厅等</div>
+    <span class="event-link" style="cursor:default;opacity:0.6;border-color:#ccc;color:#999;">免费参与，无需报名</span>
+  </div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">杭州｜AI与多资产交易的未来</div>
+      <div class="event-date">5月30日（周六）14:00-18:00</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 杭州（报名后可见详细地址）</span>
+      <span><span class="tag">AI金融</span><span class="tag">量化交易</span></span>
+    </div>
+    <div class="event-desc">探讨AI如何重构交易世界，打破股票、外汇、黄金、Crypto等不同市场之间的信息壁垒。嘉宾包括于佳宁博士、资深量化交易员、AI Agent开发者等。</div>
+    <div class="event-org">主办：123X Labs</div>
+    <a class="event-link" href="https://hz.huodongxing.com/event/2861239983800" target="_blank" rel="noopener">报名链接 →</a>
+  </div>
+</div>
+
+<!-- ========== 6月 ========== -->
+<div class="month-section">
+  <div class="month-title">2026年6月</div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">首届人工智能高质量发展大会</div>
+      <div class="event-date">6月6日（周六）</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 余杭区</span>
+      <span><span class="tag">产业政策</span><span class="tag">具身智能</span><span class="tag">高端峰会</span></span>
+    </div>
+    <div class="event-desc">中国电子商会人工智能专委会主办的高端战略会议，聚焦"十五五"AI布局与中美科技博弈。《财新中国机器人产业指数（RII）》将在会上首次发布。高通、ABB等国际巨头参与，多位政府高级官员与两院院士出席。</div>
+    <div class="event-org">主办：中国电子商会人工智能专业委员会 | 联合承办：浙江省新时代产融协同创新研究院 × 亿欧</div>
+    <a class="event-link" href="https://www.iyiou.com/news/202605161130126" target="_blank" rel="noopener">详情 →</a>
+  </div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">杭州AI落地实践大会</div>
+      <div class="event-date">6月14日（周六）</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 拱墅区</span>
+      <span><span class="tag">AI落地</span><span class="tag">实战分享</span></span>
+    </div>
+    <div class="event-desc">小型精品实战大会，"不内卷、不推销、不洗脑"，约五六十家AI企业参与。可现场体验人形机器人、机器狗、数字员工、智能客服。聚焦AI获客降本、数字员工、实体门店引流等实操话题。参与企业包括影刀、黑谷、强脑科技、松延动力等。</div>
+    <div class="event-org">参与企业：影刀、黑谷、强脑科技、松延动力等</div>
+    <span class="event-link" style="cursor:default;opacity:0.6;border-color:#ccc;color:#999;">报名渠道待公布</span>
+  </div>
+</div>
+
+<!-- ========== 8月 ========== -->
+<div class="month-section">
+  <div class="month-title">2026年8月</div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">AI HANGZHOU 2026 · 全国人工智能产业发展大会暨中国（杭州）国际人工智能展览会</div>
+      <div class="event-date">8月18日 – 8月20日</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 萧山区 · 杭州国际博览中心</span>
+      <span><span class="tag">大型展会</span><span class="tag">全产业链</span></span>
+    </div>
+    <div class="event-desc">预计展出面积30,000㎡，35,000+专业观众。覆盖AI基础层、技术层、应用层、大模型、机器人、元宇宙等八大板块。同期举办10+场论坛及2026年度AI品牌企业评选。</div>
+    <div class="event-org">承办：浙江国信展览有限公司</div>
+    <a class="event-link" href="http://www.cnena.com/zt/AIHANGZHOU" target="_blank" rel="noopener">官网报名 →</a>
+  </div>
+</div>
+
+<!-- ========== 9月 ========== -->
+<div class="month-section">
+  <div class="month-title">2026年9月</div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">百胜软件胜券AI全国巡讲杭州站</div>
+      <div class="event-date">9月4日（周四）14:00-17:20</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 杭州（报名后可见地址）</span>
+      <span><span class="tag">AI零售</span><span class="tag">企业服务</span></span>
+    </div>
+    <div class="event-desc">百胜软件主办的AI巡讲活动，聚焦零售行业AI应用场景。</div>
+    <div class="event-org">主办：上海百胜软件股份有限公司</div>
+    <a class="event-link" href="https://huodongxing.com/event/3822632556200" target="_blank" rel="noopener">报名链接 →</a>
+  </div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">杭州国际人工智能应用与机器人创新博览会（AI Show 2026）</div>
+      <div class="event-date">9月10日 – 9月12日</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 萧山区 · 杭州国际博览中心</span>
+      <span><span class="tag">机器人</span><span class="tag">AI应用</span><span class="tag">大型展会</span></span>
+    </div>
+    <div class="event-desc">展览面积20,000㎡，350+参展品牌，预计50,000+专业观众。设AI基础层、技术层、应用层、机器人、低空经济等十大展区。同期举办产业大会、路演、投融资对接会。</div>
+    <div class="event-org">主办：浙江省人工智能学会、杭州市人工智能学会等</div>
+    <a class="event-link" href="http://www.cnena.com/news/bencandy-htm-fid-11-id-99434.html" target="_blank" rel="noopener">详情 →</a>
+  </div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">G-Star Gathering Day 杭州站｜AI Native</div>
+      <div class="event-date">9月20日（周六）14:00-18:00</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 余杭区 · 菜鸟网络智慧产业园</span>
+      <span><span class="tag">AI Native</span><span class="tag">开发者</span><span class="tag">免费</span></span>
+    </div>
+    <div class="event-desc">聚焦AI Native范式的开发与产业智能实践。议题涵盖Agentic LLM、Auto-Coder、RAG等前沿技术，含制造业与IoT落地案例分享及茶歇社交环节。</div>
+    <div class="event-org">主办：G-Star Gathering</div>
+    <a class="event-link" href="https://wh.huodongxing.com/event/1823459324400" target="_blank" rel="noopener">报名链接 →</a>
+  </div>
+</div>
+
+<!-- ========== 10月 ========== -->
+<div class="month-section">
+  <div class="month-title">2026年10月</div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">SPML 2026 · 国际信号处理与机器学习会议</div>
+      <div class="event-date">10月7日 – 10月12日</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 杭州电子科技大学</span>
+      <span><span class="tag">学术会议</span><span class="tag">机器学习</span></span>
+    </div>
+    <div class="event-desc">信号处理与机器学习领域的国际学术会议，含多场专题研讨会及Workshop。</div>
+    <div class="event-org">主办：杭州电子科技大学</div>
+    <a class="event-link" href="https://10times.com/zh-CN/spml-hangzhou" target="_blank" rel="noopener">详情 →</a>
+  </div>
+</div>
+
+<!-- ========== 11月 ========== -->
+<div class="month-section">
+  <div class="month-title">2026年11月</div>
+
+  <div class="event-card">
+    <div class="event-header">
+      <div class="event-name">ICCSIS 2026 · 计算机科学与智能系统国际学术会议</div>
+      <div class="event-date">11月13日 – 11月15日</div>
+    </div>
+    <div class="event-meta">
+      <span>📍 杭州</span>
+      <span><span class="tag">学术会议</span><span class="tag">IEEE出版</span></span>
+    </div>
+    <div class="event-desc">由浙江科技大学与浙江省人工智能学会联合主办，IEEE出版。覆盖计算机科学与智能系统前沿研究。</div>
+    <div class="event-org">主办：浙江科技大学、浙江省人工智能学会</div>
+    <a class="event-link" href="https://www.scholat.com/orgPost.html?id=5664" target="_blank" rel="noopener">详情 →</a>
+  </div>
+</div>
+
+<footer>
+  <p>杭州AI活动日历 · 每日自动更新</p>
+  <p>数据来源：活动行、各大主办方官网及公开信息</p>
+  <p style="margin-top:8px;">Powered by <a href="https://ala2017.github.io/hangzhou-ai-events/" target="_blank">GitHub Pages</a></p>
+</footer>
+
+</div>
+</body>
+</html>
