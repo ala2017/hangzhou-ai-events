@@ -5,567 +5,478 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>杭州AI+OPC活动日历</title>
 <style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   :root {
-    color-scheme: light;
-    --blue: #2563eb;
-    --purple: #7c3aed;
-    --pink: #db2777;
-    --bg: #f8fafc;
-    --card: #ffffff;
-    --text: #1e293b;
-    --muted: #64748b;
-    --border: #e2e8f0;
+    --tide: #0b1a2e; --tide-light: #1a2f4a; --surge: #c8903c; --surge-glow: #e8b85a;
+    --spray: #e8edf2; --mist: #94a8ba; --foam: #f5f7fa; --card-bg: #ffffff;
+    --text: #0f172a; --text-muted: #5a6f82; --border: #dce2ea;
+    --pill-free: #e1f7e7; --pill-free-text: #1b7a3a;
+    --pill-paid: #fef5d6; --pill-paid-text: #8a6a0a;
+    --pill-hot: #fde8ef; --pill-hot-text: #b01a4a;
+    --pill-invite: #eef1f5; --pill-invite-text: #4b5a6a;
+    --radius: 14px;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background: var(--foam); color: var(--text); line-height: 1.65; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
-  body::before {
-    content: ''; display: block; height: 3px;
-    background: linear-gradient(90deg, var(--blue), var(--purple), var(--pink), var(--blue));
-    background-size: 200% 100%; animation: shift 6s ease infinite;
+  .tide-bar {
+    height: 4px; background: linear-gradient(90deg,var(--tide)0%,var(--surge)40%,var(--surge-glow)60%,var(--tide)100%);
+    background-size: 300% 100%; animation: tide-flow 8s ease-in-out infinite; position: relative; overflow: hidden;
   }
-  @keyframes shift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
-
-  .container { max-width: 800px; margin: 0 auto; padding: 36px 20px 48px; }
-
-  /* Header */
-  .header { margin-bottom: 32px; }
-  .header-badge {
-    display: inline-block; font-size: 12px; letter-spacing: .1em; color: var(--blue);
-    background: #eff6ff; padding: 3px 12px; border-radius: 20px; margin-bottom: 12px; font-weight: 600;
+  .tide-bar::after {
+    content: ''; position: absolute; top: 0; left: 20%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(200,144,60,.3) 50%, transparent 100%);
+    animation: tide-shimmer 4s ease-in-out infinite;
   }
-  .header h1 { font-size: 32px; font-weight: 800; letter-spacing: -.02em; color: #0f172a; }
-  .header h1 span { color: var(--blue); }
-
-  /* Tabs */
-  .tabs { display: flex; gap: 0; margin-bottom: 24px; background: #e2e8f0; border-radius: 10px; padding: 3px; }
-  .tab-btn {
-    flex: 1; padding: 8px 0; text-align: center; font-size: 14px; font-weight: 600;
-    border: none; background: transparent; color: var(--muted); cursor: pointer;
-    border-radius: 8px; transition: all .2s;
+  @keyframes tide-flow { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+  @keyframes tide-shimmer { 0%,100%{transform:translateX(-30%);opacity:0} 50%{transform:translateX(30%);opacity:1} }
+  .page { max-width: 820px; margin: 0 auto; padding: 40px 24px 56px; }
+  .masthead { margin-bottom: 36px; animation: fade-up .6s ease both; }
+  .masthead-tag {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;
+    letter-spacing: .12em; color: var(--surge); background: rgba(200,144,60,.08);
+    padding: 4px 14px; border-radius: 20px; margin-bottom: 14px;
   }
-  .tab-btn.active { background: #fff; color: var(--blue); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-  .tab-btn:hover:not(.active) { color: #475569; }
-
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  /* Stats */
-  .stats {
-    display: flex; align-items: center; gap: 10px; background: #f0f9ff;
-    border: 1px solid #bae6fd; border-radius: 10px; padding: 12px 18px; margin-bottom: 28px;
-    font-size: 14px; color: #0c4a6e;
-  }
-  .stats .num { font-size: 24px; font-weight: 800; color: var(--blue); line-height: 1; }
-
-  /* Month section */
-  .month-label {
-    font-size: 13px; font-weight: 700; color: var(--blue); letter-spacing: .06em;
-    padding: 4px 0 8px; margin-bottom: 8px; border-bottom: 1.5px solid #e2e8f0;
-  }
-
-  /* Event Card - compact */
-  .event-card {
-    display: flex; align-items: flex-start; gap: 14px;
-    background: var(--card); border-radius: 10px; padding: 16px 18px;
-    margin-bottom: 8px; border: 1px solid #f1f5f9;
-    transition: box-shadow .15s, transform .15s;
-  }
-  .event-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.05); transform: translateY(-1px); }
-
-  /* Date badge */
-  .date-badge {
-    flex-shrink: 0; width: 52px; text-align: center;
-    background: #eff6ff; border-radius: 8px; padding: 6px 0; line-height: 1.2;
-  }
-  .date-badge .d-month { font-size: 10px; color: var(--blue); font-weight: 700; letter-spacing: .04em; }
-  .date-badge .d-day { font-size: 22px; font-weight: 800; color: var(--blue); }
-  .date-badge .d-wk { font-size: 10px; color: #94a3b8; }
-
-  /* Card body */
-  .card-body { flex: 1; min-width: 0; }
-  .card-body .title {
-    font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 4px; line-height: 1.3;
-  }
-  .card-body .meta {
-    font-size: 12.5px; color: var(--muted); margin-bottom: 4px;
-    display: flex; flex-wrap: wrap; gap: 8px;
-  }
-  .card-body .desc { font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 6px; }
-  .card-body .bottom-row {
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;
-  }
-
-  /* Tags */
-  .tags { display: flex; gap: 5px; flex-wrap: wrap; }
-  .tag {
-    font-size: 10.5px; padding: 1px 8px; border-radius: 4px; font-weight: 600; letter-spacing: .02em;
-  }
-  .tag-free { background: #dcfce7; color: #166534; }
-  .tag-paid { background: #fef3c7; color: #92400e; }
-  .tag-hot { background: #fce7f3; color: #9d174d; }
-  .tag-invite { background: #f1f5f9; color: #475569; }
-
-  /* Link */
-  .card-link {
-    font-size: 12.5px; font-weight: 600; color: var(--blue); text-decoration: none;
-    white-space: nowrap; transition: color .15s;
-  }
-  .card-link:hover { color: #1d4ed8; }
-
-  /* Footer */
-  .footer {
-    text-align: center; margin-top: 40px; padding-top: 20px;
-    border-top: 1px solid var(--border); color: #94a3b8; font-size: 12px;
-  }
-  .footer span { color: var(--blue); }
-
-  /* Empty state */
-  .empty-state {
-    text-align: center; padding: 48px 20px; color: var(--muted);
-  }
-  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-state p { font-size: 14px; }
-
-  /* Responsive */
+  .masthead-tag::before { content: ''; width: 5px; height: 5px; background: var(--surge); border-radius: 50%; }
+  .masthead h1 { font-size: 34px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; color: var(--tide); }
+  .masthead h1 .hl-tide { color: var(--surge); }
+  .masthead p { font-size: 14px; color: var(--text-muted); margin-top: 8px; max-width: 540px; line-height: 1.6; }
+  .tab-bar { display: flex; gap: 2px; margin-bottom: 24px; background: var(--border); border-radius: 12px; padding: 3px; animation: fade-up .6s ease both; animation-delay: .1s; }
+  .tab-btn { flex: 1; padding: 10px 0; text-align: center; font-family: inherit; font-size: 13px; font-weight: 600; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 10px; transition: all .25s ease; }
+  .tab-btn:hover { color: var(--tide); }
+  .tab-btn.active { background: #fff; color: var(--tide); box-shadow: 0 1px 4px rgba(11,26,46,.08); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+  .stats-bar { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg,rgba(11,26,46,.03),rgba(200,144,60,.05)); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 20px; margin-bottom: 28px; font-size: 13.5px; color: var(--text-muted); animation: fade-up .6s ease both; animation-delay: .15s; }
+  .stats-bar .num { font-size: 28px; font-weight: 800; color: var(--tide); line-height: 1; }
+  .stats-bar .label { font-weight: 500; }
+  .stats-bar .label strong { color: var(--tide); }
+  .month-hr { display: flex; align-items: center; gap: 12px; margin: 28px 0 16px; animation: fade-up .5s ease both; }
+  .month-hr:first-of-type { margin-top: 0; }
+  .month-hr .mon { font-size: 14px; font-weight: 700; color: var(--tide); white-space: nowrap; }
+  .month-hr .mon em { font-style: normal; color: var(--surge); }
+  .month-hr .rule { flex: 1; height: 1px; background: linear-gradient(90deg,var(--border),transparent); }
+  .month-hr .count-badge { font-size: 11px; color: var(--mist); background: var(--spray); padding: 2px 10px; border-radius: 12px; font-weight: 500; }
+  .event { display: flex; gap: 16px; padding: 16px 20px; background: var(--card-bg); border-radius: var(--radius); margin-bottom: 8px; border: 1px solid var(--border); transition: all .2s ease; animation: fade-up .5s ease both; }
+  .event:hover { border-color: var(--surge); box-shadow: 0 2px 12px rgba(11,26,46,.06); }
+  .date-stamp { flex-shrink: 0; width: 48px; display: flex; flex-direction: column; align-items: center; padding: 6px 0; background: var(--spray); border-radius: 10px; line-height: 1.15; user-select: none; }
+  .date-stamp .mon-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; color: var(--tide); }
+  .date-stamp .day-lbl { font-size: 20px; font-weight: 800; color: var(--tide); line-height: 1.1; }
+  .date-stamp .wk-lbl { font-size: 9px; font-weight: 500; color: var(--mist); margin-top: 1px; }
+  .event-body { flex: 1; min-width: 0; }
+  .event-title { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.35; margin-bottom: 3px; }
+  .event-meta { font-size: 12px; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 4px; }
+  .event-meta span { opacity: .8; }
+  .event-desc { font-size: 12.5px; color: var(--text); opacity: .72; line-height: 1.55; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .event:hover .event-desc { -webkit-line-clamp: unset; }
+  .event-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  .pill-group { display: flex; gap: 5px; flex-wrap: wrap; }
+  .pill { font-size: 10px; padding: 2px 9px; border-radius: 5px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; }
+  .pill-free { background: var(--pill-free); color: var(--pill-free-text); }
+  .pill-hot { background: var(--pill-hot); color: var(--pill-hot-text); }
+  .pill-invite { background: var(--pill-invite); color: var(--pill-invite-text); }
+  .pill-paid { background: var(--pill-paid); color: var(--pill-paid-text); }
+  .event-cta { font-size: 12px; font-weight: 600; color: var(--surge); text-decoration: none; white-space: nowrap; transition: all .2s; display: inline-flex; align-items: center; gap: 2px; }
+  .event-cta:hover { color: var(--tide); }
+  .card-art { flex-shrink: 0; width: 80px; height: 80px; border-radius: 10px; overflow: hidden; background: var(--spray); margin-top: 2px; }
+  .card-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card-art.is-empty { display: none; }
+  .colophon { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--mist); line-height: 1.8; }
+  .colophon strong { color: var(--surge); font-weight: 600; }
+  @keyframes fade-up { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
   @media (max-width: 600px) {
-    .container { padding: 24px 12px 36px; }
-    .header h1 { font-size: 26px; }
-    .event-card { padding: 12px 14px; gap: 10px; }
-    .date-badge { width: 44px; }
-    .date-badge .d-day { font-size: 18px; }
-    .card-body .title { font-size: 14px; }
-    .card-body .meta { font-size: 11.5px; }
+    .page { padding: 24px 14px 40px; } .masthead h1 { font-size: 26px; }
+    .event { padding: 12px 14px; gap: 12px; } .date-stamp { width: 40px; }
+    .date-stamp .day-lbl { font-size: 17px; } .event-title { font-size: 14px; }
+    .event-desc { font-size: 11.5px; -webkit-line-clamp: 2; }
+    .card-art { width: 60px; height: 60px; } .stats-bar { padding: 10px 14px; }
+    .stats-bar .num { font-size: 22px; }
   }
+  @media (max-width: 400px) { .card-art { display: none; } }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="tide-bar"></div>
+<div class="page">
 
-  <header class="header">
-    <div class="header-badge">杭州线下活动</div>
-    <h1>杭州<span>AI+OPC</span>活动日历</h1>
-  </header>
+<header class="masthead">
+<div class="masthead-tag">杭州 · 线下</div>
+<h1>杭州<span class="hl-tide">AI+OPC</span>活动日历</h1>
+<p>聚合杭州地区人工智能与一人公司线下活动，每日自动追踪更新。</p>
+</header>
 
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('ai')">🤖 AI 活动</button>
-    <button class="tab-btn" onclick="switchTab('opc')">🚀 OPC 创业</button>
-  </div>
-
-  <div class="stats">
-    <span class="num" id="total-count">25</span>
-    <span id="total-label">场即将举办的线下活动 · 持续更新中</span>
-  </div>
-
-  <!-- ========== AI Tab ========== -->
-  <div class="tab-content active" id="tab-ai">
-
-    <div class="month-label" style="margin-top:20px">2026年6月</div>
-        <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">7</div><div class="d-wk">周日</div></div>
-      <div class="card-body">
-        <div class="title">AI杠杆与超级个体：从OpenClaw到一人公司（OPC）</div>
-        <div class="meta"><span>📍 杭州上城区红普路788号绿谷发展中心6号楼6楼</span><span>🏛️ 亚马逊云科技杭州User Group</span></div>
-        <div class="desc">从OpenClaw到Quick谈AI效率提升、Fusion GraphRAG与AI Memory落地实践、FastGPT助力构建企业级服务能力。含OpenClaw动手实践营，自带电脑参与。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://huodongxing.com/event/4863633441011" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="0"><div class="preview-overlay"><img src="https://wimg.huodongxing.com/logo/202606/4863633441011/415997455328233_v2.jpg@!wmlogo" alt="活动海报"></div></div>
-    </div>
-<div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">10</div><div class="d-wk">周三</div></div>
-      <div class="card-body">
-        <div class="title">2026 Google Cloud Startup Day</div>
-        <div class="meta"><span>📍 杭州（审核后通知）</span><span>🏛️ Google Cloud</span></div>
-        <div class="desc">「Prompt the Future. Build the World」——Google Cloud全球初创业务副总裁Darren Mowry、大中华区总裁尹世明等嘉宾出席。深度解析AI技术路线与全球出海全链路生态。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span><span class="tag tag-hot">热门</span></div>
-          <a class="card-link" href="https://www.sohu.com/a/1025767492_121119000" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">10</div><div class="d-wk">周三</div></div>
-      <div class="card-body">
-        <div class="title">IDC Directions 杭州站｜长三角AI决策者集结</div>
-        <div class="meta"><span>📍 杭州（报名后通知）</span><span>🏛️ IDC</span></div>
-        <div class="desc">聚焦万亿AI超级周期与中国全球创新。涵盖从Token到Agent的企业AI范式跃迁、物理AI与具身智能机器人、AI Agent驱动的算力基础设施重构等议题。面向长三角CxO与决策者。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://www.sohu.com/a/1030481820_121124366" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">11</div><div class="d-wk">周四</div></div>
-      <div class="card-body">
-        <div class="title">阿里AI外贸峰会（全球总部）——2026阿里国际站出海新范式加场</div>
-        <div class="meta"><span>📍 阿里巴巴滨江园区报告厅</span><span>🏛️ 阿里国际站杭州总部</span></div>
-        <div class="desc">2026阿里国际站出海新范式加场，趋势热品揭秘+现场AI演示、国际站从0到1 SOP拆解、平台资源与杭州商家行动点建议、一对一问诊室。限额100人先到先得。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://4204956645834.huodongxing.com/event/8863364847700" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">11</div><div class="d-wk">周四</div></div>
-      <div class="card-body">
-        <div class="title">AI新时代：企业破局之道与高效获客策略</div>
-        <div class="meta"><span>📍 杭州滨江区聚工路11号创伟科技园B座1楼会议室</span><span>🏛️ 创梦工场创业陪跑空间</span></div>
-        <div class="desc">资深行业专家详解AI助力企业转型实操方案，分享智能运营、精准获客的实用打法。运用AI降本提效、完善获客体系，依托实战案例助力企业突破发展困境。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://www.sohu.com/a/1032699963_121106994" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">11</div><div class="d-wk">周四</div></div>
-      <div class="card-body">
-        <div class="title">混沌创商院x杭州六小龙之群核科技游学</div>
-        <div class="meta"><span>📍 杭州拱墅区矩阵国际1号楼11楼（群核科技）</span><span>🏛️ 混沌创商院 · 群核科技</span></div>
-        <div class="desc">「走进空间智能时代」——群核科技副总裁分享空间智能布局与应用。体验SpatialLM、Aholo等空间智能模型，玩转酷家乐AI解决方案。仅限混沌大课同学参加。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费（仅限混沌同学）</span></div>
-          <a class="card-link" href="https://party.hudongba.com/party/fjsa7.html" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-    </div>
-<div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">11-13</div><div class="d-wk">周三-周五</div></div>
-      <div class="card-body">
-        <div class="title">2026中国（浙江）视觉智能产业应用展览会</div>
-        <div class="meta"><span>📍 杭州国际博览中心</span><span>🏛️ 杭州华展展览有限公司</span></div>
-        <div class="desc">「AI驱动·场景落地·产业升级」——展览面积20,000㎡，六大展示范围：AI+机器人、机器视觉与工业智能、AI城市与智慧场景、低空经济、具身智能、智能能源。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://www.zhanhuiquan.com/info/show/?id=233471" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">12-14</div><div class="d-wk">周五-周日</div></div>
-      <div class="card-body">
-        <div class="title">2026工程机械行业科技节</div>
-        <div class="meta"><span>📍 杭州临平区艺尚小镇国际秀场</span><span>🏛️ 中国工程机械工业协会 · 浙江大学高端装备研究院</span></div>
-        <div class="desc">「工程机械＋智能智造·机器人化·人工智能·新能源」——科技创新成果展示，涵盖整机产品、核心零部件、产业化项目。室内光地展位免费开放。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="http://www.cncma.org/article/22429" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">12-14</div><div class="d-wk">周五-周日</div></div>
-      <div class="card-body">
-        <div class="title">🎬 TapTV Arena AI动画黑客松 · 杭州站「Urban Glitch·都市异常」</div>
-        <div class="meta"><span>📍 杭州西湖艺创小镇</span><span>🏛️ TapNow · MiniEleph · WUHU动画人空间</span></div>
-        <div class="desc">全球最大AI动画黑客松，36小时线下集中创作。招募100支队伍，总奖金池60万元，算力+现金投入超140万元。主题「都市异常」——都市真实场景融入超现实异常叙事。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费参赛</span><span class="tag tag-hot">热门</span></div>
-          <a class="card-link" href="https://www.aitop100.cn/infomation/details/33855.html" target="_blank" rel="noopener">报名参加 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-            <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">12</div><div class="d-wk">周五</div></div>
-      <div class="card-body">
-        <div class="title">走进蚂蚁集团——共话AI Agent规模化落地实战 ｜AI碰撞会·杭州站</div>
-        <div class="meta"><span>📍 杭州蚂蚁集团A空间</span><span>🏛️ OceanBase · 蚂蚁集团 · 亚马逊云科技</span></div>
-        <div class="desc">聚焦AI Agent规模化落地四大关键：产品验证PMF、数据基建新范式、安全合规暗礁、VC视角融资真相。含圆桌碰撞与蚂蚁A空间展厅参观。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://open.oceanbase.com/activities/4924014" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-<div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">13-14</div><div class="d-wk">周六-周日</div></div>
-      <div class="card-body">
-        <div class="title">AI电商增长操盘营——2天1夜AI重构电商增长力</div>
-        <div class="meta"><span>📍 杭州余杭区未来科技城阿里钉钉园区</span><span>🏛️ 杭州跨境电子商务协会 · 至顶教育</span></div>
-        <div class="desc">小班实训，覆盖AI电商顶层设计、智能体搭建、AI图像与视频生成实战、N8N自动化生产线。讲师为前淘宝教育副总经理刘国峰，已培训2200+电商商家。未掌握可免费复训一次。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-paid">¥3,980</span></div>
-          <a class="card-link" href="http://hzcea.org.cn/article/5735545194702794" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">13</div><div class="d-wk">周六</div></div>
-      <div class="card-body">
-        <div class="title">ADG杭州：从Vibe Coding到Agentic Engineering——AI原生开发实践</div>
-        <div class="meta"><span>📍 杭州余杭区未来科技城国际人才园302室</span><span>🏛️ 杭州ADG社区 · 字节跳动</span></div>
-        <div class="desc">字节Trae × 火山Agent Plan驱动AI原生开发实践。三位嘉宾分享AI产品方法论、Vibe Coding实践与行业级产品解决方案。Workshop环节30分钟现场完成AI产品原型。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://4692488724490.huodongxing.com/event/5863819580500" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-<div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">14</div><div class="d-wk">周日</div></div>
-      <div class="card-body">
-        <div class="title">AI创业达人秀｜Google Build with AI 2026 杭州站第三场</div>
-        <div class="meta"><span>📍 杭州拱墅区祥园路108号智慧信息产业园G座3楼</span><span>🏛️ 杭州谷歌开发者社区（GDG）</span></div>
-        <div class="desc">杭州GDG主办的AI创业主题活动。聚焦AI技术创业方向，提供项目展示、技术交流与资源对接平台。适合AI创业者、开发者及技术爱好者参与。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://hz.huodongxing.com/event/6862767322511" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="0"><div class="preview-overlay"><img src="https://wimg.huodongxing.com/logo/202605/6862767322511/825994876069330_v2.jpg@!wmlogo" alt="活动海报"></div></div>
-    </div>
-
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">14</div><div class="d-wk">周日</div></div>
-      <div class="card-body">
-        <div class="title">爱搜GEO主题沙龙：AI全域获客增长（杭州站）</div>
-        <div class="meta"><span>📍 杭州余杭区仓前街道浙富控股大厦1号楼9楼</span><span>🏛️ 爱搜 · 抖查查</span></div>
-        <div class="desc">聚焦AI搜索时代的全域获客方法论，涵盖GEO+DSO模型、抖音SEO与AI搜索优化、AI驱动的内容获客策略，适合创业者与增长负责人。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-paid">¥79起</span></div>
-          <a class="card-link" href="https://6123825679383.huodongxing.com/event/4861646670211" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-        <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">17</div><div class="d-wk">周三</div></div>
-      <div class="card-body">
-        <div class="title">剧有引力 增长有戏——AI短剧出海实战沙龙</div>
-        <div class="meta"><span>📍 杭州滨江区钱潮开元酒店29楼云栖厅</span><span>🏛️ Nativex · 万兴科技 · 阿里云 · TikTok for Business</span></div>
-        <div class="desc">聚焦AI短剧出海全链路。万兴科技、阿里云、TikTok for Business等嘉宾分享AI创作实践、短剧工业化生产与全球化分发策略，含轻辩论互动环节。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://www.10100.com/hd/138755344" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">19-21</div><div class="d-wk">周五-周日</div></div>
-      <div class="card-body">
-        <div class="title">进化酒馆黑客松·杭州站——超越迷宫，走向彼岸</div>
-        <div class="meta"><span>📍 杭州（报名审核后通知）</span><span>🏛️ EVOTAVERN 进化酒馆</span></div>
-        <div class="desc">第三届Agent Hackathon，48小时基于EvoMap打造自进化AI Agent。三大赛道：A2A蜂群协作、深度个性化长记忆助理、垂类领域自进化。完全免费含餐饮，面向开发者与AI创业者。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span><span class="tag tag-hot">热门</span></div>
-          <a class="card-link" href="https://news.qq.com/rain/a/20260605A04MNX00" target="_blank" rel="noopener">报名参加 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-<div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">21</div><div class="d-wk">截止报名</div></div>
-      <div class="card-body">
-        <div class="title">「火山杯」Agent创新大赛 · 临平站</div>
-        <div class="meta"><span>📍 杭州临平新城</span><span>🏛️ 临平区政府</span></div>
-        <div class="desc">五大赛道（决策优化、降本增效、交互升级、合规风控、其他创新），面向开发者和创新团队。一等奖5000元、二等奖3000元、三等奖1000元及创意奖。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费参赛</span></div>
-          <a class="card-link" href="https://www.linping.gov.cn/col/col1229520432/art/2026/art_653cca86839b4b4b8b9e6c5923a19e6d.html" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-        <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">24-25</div><div class="d-wk">周三-周四</div></div>
-      <div class="card-body">
-        <div class="title">2026 第三届具身人形机器人应用场景拓展大会</div>
-        <div class="meta"><span>📍 杭州水博园大酒店（萧山区）</span><span>🏛️ 新战略移动机器人咨询</span></div>
-        <div class="desc">聚焦具身人形机器人在工业、服务、特种等场景的落地应用。涵盖最新技术路径、场景案例分享与产业生态对接，面向机器人产业从业者与投资人。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://1104176580401.huodongxing.com/event/5856726773700" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-<div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">26-28</div><div class="d-wk">周四-周六</div></div>
-      <div class="card-body">
-        <div class="title">首届世界中医药人工智能大会</div>
-        <div class="meta"><span>📍 杭州之江饭店（拱墅区）</span><span>🏛️ 世界中医药学会联合会 · 浙江中医药大学</span></div>
-        <div class="desc">「拥抱AI时代·中医药智愈未来」——涵盖AI+中医药数据建设、智能康复、数字教育、古籍数字化等多个分会场，构建中医药+AI千亿级产业生态。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-paid">¥1500起</span></div>
-          <a class="card-link" href="https://wfcms.daanjiankang.com/wfcms-m/#/gen-meet-home?meetUuid=f5f3bb5243d04c739e122d28b007a7d2" target="_blank" rel="noopener">注册参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-        <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">26-28</div><div class="d-wk">周五-周日</div></div>
-      <div class="card-body">
-        <div class="title">AI时代信息资源管理与图书情报发展大会</div>
-        <div class="meta"><span>📍 杭州电子科技大学科技馆2楼报告厅</span><span>🏛️ 杭州电子科技大学</span></div>
-        <div class="desc">探讨人工智能环境下信息资源管理与图书情报学科发展。面向图书馆学、情报学、图书情报及相关学科的专家学者、研究生及从业人员，含研究生学术论坛。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://www.cnbksy.com/meeting/meetingInfo/M_39321" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-<div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">28</div><div class="d-wk">周日</div></div>
-      <div class="card-body">
-        <div class="title">亚马逊云科技 User Group Community 2026·Summer — Signal over Noise</div>
-        <div class="meta"><span>📍 杭州（报名审核后通知）</span><span>🏛️ 亚马逊云科技 User Group</span></div>
-        <div class="desc">「信号觉醒·在信息洪流中构建价值」——四大议题方向：AI出海、Agent & Data、超级个体（OPC）、开源。Builder社群年度夏季技术盛会。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="https://4023173718737.huodongxing.com/event/6857607994600" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    <div class="month-label" style="margin-top:20px">2026年7月</div>
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">7月</div><div class="d-day">2-3</div><div class="d-wk">周四-周五</div></div>
-      <div class="card-body">
-        <div class="title">2026中国AI智能体大会（AgenticAICon）</div>
-        <div class="meta"><span>📍 杭州君悦酒店（西湖区）</span><span>🏛️ 智东西 · 智猩猩</span></div>
-        <div class="desc">「范式跃迁 重塑世界」——聚焦Agentic AI范式演进与生产力革新。70+嘉宾（阿里、美团、腾讯等），涵盖Coding Agent、企业级AI智能体、深度研究智能体等九大方向。同期设有展览区。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-paid">¥0-1698</span></div>
-          <a class="card-link" href="https://9324969747305.huodongxing.com/event/9859783144600" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">7月</div><div class="d-day">22-26</div><div class="d-wk">周二-周六</div></div>
-      <div class="card-body">
-        <div class="title">AdventureX 2026 · 中国最大黑客松</div>
-        <div class="meta"><span>📍 杭州（具体地址待公布）</span><span>🏛️ AdventureX</span></div>
-        <div class="desc">120小时极限创造，招募800名年轻创造者。总奖金100万元，食宿全包，出行补贴。Workshop+项目展会+闭幕音乐节。26岁以下青年/学生优先。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费（含食宿）</span><span class="tag tag-hot">热门</span></div>
-          <a class="card-link" href="https://adventure-x.org" target="_blank" rel="noopener">报名参加 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    <div class="month-label" style="margin-top:20px">2026年8月</div>
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">8月</div><div class="d-day">18-20</div><div class="d-wk">周一-周三</div></div>
-      <div class="card-body">
-        <div class="title">AI Hangzhou 2026 杭州人工智能大会</div>
-        <div class="meta"><span>📍 杭州国际博览中心</span><span>🏛️ 杭州人工智能大会组委会</span></div>
-        <div class="desc">「全球智聚钱塘，共筑AI新篇章」——展览面积30,000㎡，预计35,000+专业观众。覆盖智能算法、算力基础设施、智能机器人、AI+行业应用、数字安防五大展区。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span></div>
-          <a class="card-link" href="http://business.china.com.cn/2026-05/07/content_43420785.shtml" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-    <div class="month-label" style="margin-top:20px">2026年9月</div>
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">9月</div><div class="d-day">10-12</div><div class="d-wk">周三-周五</div></div>
-      <div class="card-body">
-        <div class="title">杭州国际人工智能应用与机器人创新博览会</div>
-        <div class="meta"><span>📍 杭州国际博览中心（萧山区）</span><span>🏛️ 浙江省人工智能学会</span></div>
-        <div class="desc">「杭聚全球智·AI启新程」——展览面积20,000㎡，350+参展品牌，预计50,000人次。十大核心展区：具身智能、人形机器人、大模型、元宇宙、低空经济等。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费（业内）</span></div>
-          <a class="card-link" href="http://www.szfa.com/exhibit/202604/02/9306.html" target="_blank" rel="noopener">查看详情 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-  </div><!-- /tab-ai -->
-
-  <!-- ========== OPC Tab ========== -->
-  <div class="tab-content" id="tab-opc">
-    <div class="month-label">2026年6月</div>
-    
-    <div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">16</div><div class="d-wk">周二</div></div>
-      <div class="card-body">
-        <div class="title">壮大「耐心资本」陪跑AI时代创业——2026浙江省科技金融论坛</div>
-        <div class="meta"><span>📍 杭州未来科技城学术交流中心（余杭区）</span><span>🏛️ 浙江省科技创新企业协会 · OPC生态圈</span></div>
-        <div class="desc">聚焦AI时代创业与科技金融。含OPC专委会揭牌、浙江省OPC产业联盟成立、OPC社区发展大会闭门会。浙大原副校长黄先海、省创投协会秘书长顾斌等嘉宾出席。圆桌论坛：产业OPC的发展路径。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-free">免费</span><span class="tag tag-hot">热门</span></div>
-          <a class="card-link" href="https://cs.huodongxing.com/event/4860743945700" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-
-<div class="event-card">
-      <div class="date-badge"><div class="d-month">6月</div><div class="d-day">27-29</div><div class="d-wk">周六-周一</div></div>
-      <div class="card-body">
-        <div class="title">OPC一人公司OPD一人部门三天进化实战营（第二期）</div>
-        <div class="meta"><span>📍 杭州萧山区瓜沥镇钱江电气智联科创园5号楼8层</span><span>🏛️ 智能体来了集团 · OPC China</span></div>
-        <div class="desc">三天全栈实战：Day 1跑通基建（搭环境）、Day 2灵魂配置（OpenClaw/Hermes Agent部署与自动化引擎配置）、Day 3业务落地。专为一人公司经营者与企业一人部门设计。</div>
-        <div class="bottom-row">
-          <div class="tags"><span class="tag tag-paid">¥3,980</span></div>
-          <a class="card-link" href="https://huodongxing.com/event/8863633093511" target="_blank" rel="noopener">报名参会 →</a>
-        </div>
-      </div>
-      <div class="card-img" data-empty="1"><div class="preview-overlay"><img src="" alt="活动海报"></div></div>
-    </div>
-</div><!-- /tab-opc -->
-
-  <footer class="footer">
-    <p>每日自动更新 · 数据来源：活动行、新华网、各主办方官网等</p>
-    <p>最后更新：<span>2026年6月6日</span></p>
-  </footer>
-
+<div class="tab-bar">
+<button class="tab-btn active" data-tab="ai">AI 活动</button>
+<button class="tab-btn" data-tab="opc">OPC 创业</button>
 </div>
 
-<script>
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  event.target.classList.add('active');
+<div class="stats-bar">
+<span class="num" id="stat-num">25</span>
+<span class="label">场即将举办的 <strong id="stat-label">AI</strong> 线下活动 · 持续更新中</span>
+</div>
 
-  // Update stats
-  const aiCount = document.querySelectorAll('#tab-ai .event-card').length;
-  const opcCount = document.querySelectorAll('#tab-opc .event-card').length;
-  const total = tab === 'ai' ? aiCount : opcCount;
-  document.getElementById('total-count').textContent = total;
-  document.getElementById('total-label').textContent =
-    tab === 'ai' ? '场即将举办的AI线下活动 · 持续更新中'
-    : (opcCount === 0 ? '场即将举办的OPC线下活动 · 持续关注中' : '场即将举办的OPC线下活动 · 持续更新中');
-}
+<!-- AI Tab -->
+<div class="tab-pane active" id="tab-ai">
+<div class="month-hr"><span class="mon">2026年<em>6月</em></span><span class="rule"></span></div>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-7"><span class="mon-lbl">6月</span><span class="day-lbl">7</span><span class="wk-lbl">周日</span></time>
+<div class="event-body">
+<h3 class="event-title">AI杠杆与超级个体：从OpenClaw到一人公司</h3>
+<div class="event-meta"><span>杭州上城区红普路788号</span><span>亚马逊云科技杭州User Group</span></div>
+<p class="event-desc">从OpenClaw到Quick谈AI效率提升、Fusion GraphRAG与AI Memory落地实践、FastGPT助力构建企业级服务能力。含OpenClaw动手实践营，自带电脑参与。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://huodongxing.com/event/4863633441011" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art"><img src="https://wimg.huodongxing.com/logo/202606/4863633441011/415997455328233_v2.jpg@!wmlogo" alt="" loading="lazy" /></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-10"><span class="mon-lbl">6月</span><span class="day-lbl">10</span><span class="wk-lbl">周三</span></time>
+<div class="event-body">
+<h3 class="event-title">2026 Google Cloud Startup Day</h3>
+<div class="event-meta"><span>杭州（审核后通知）</span><span>Google Cloud</span></div>
+<p class="event-desc">「Prompt the Future. Build the World」——Google Cloud全球初创业务副总裁Darren Mowry、大中华区总裁尹世明等嘉宾出席。深度解析AI技术路线与全球出海全链路生态。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span> <span class="pill pill-hot">热门</span></div>
+<a class="event-cta" href="https://www.sohu.com/a/1025767492_121119000" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-10"><span class="mon-lbl">6月</span><span class="day-lbl">10</span><span class="wk-lbl">周三</span></time>
+<div class="event-body">
+<h3 class="event-title">IDC Directions 杭州站｜长三角AI决策者集结</h3>
+<div class="event-meta"><span>杭州（报名后通知）</span><span>IDC</span></div>
+<p class="event-desc">聚焦万亿AI超级周期与中国全球创新。涵盖从Token到Agent的企业AI范式跃迁、物理AI与具身智能机器人、AI Agent驱动的算力基础设施重构等议题。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://www.sohu.com/a/1030481820_121124366" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-11"><span class="mon-lbl">6月</span><span class="day-lbl">11</span><span class="wk-lbl">周四</span></time>
+<div class="event-body">
+<h3 class="event-title">阿里AI外贸峰会——2026阿里国际站出海新范式加场</h3>
+<div class="event-meta"><span>阿里巴巴滨江园区报告厅</span><span>阿里国际站杭州总部</span></div>
+<p class="event-desc">2026阿里国际站出海新范式加场，趋势热品揭秘+现场AI演示、国际站从0到1 SOP拆解、平台资源与杭州商家行动点建议、一对一问诊室。限额100人先到先得。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://4204956645834.huodongxing.com/event/8863364847700" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-11"><span class="mon-lbl">6月</span><span class="day-lbl">11</span><span class="wk-lbl">周四</span></time>
+<div class="event-body">
+<h3 class="event-title">AI新时代：企业破局之道与高效获客策略</h3>
+<div class="event-meta"><span>杭州滨江区创伟科技园</span><span>创梦工场创业陪跑空间</span></div>
+<p class="event-desc">资深行业专家详解AI助力企业转型实操方案，分享智能运营、精准获客的实用打法。运用AI降本提效、完善获客体系，依托实战案例助力企业突破发展困境。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://www.sohu.com/a/1032699963_121106994" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-11"><span class="mon-lbl">6月</span><span class="day-lbl">11</span><span class="wk-lbl">周四</span></time>
+<div class="event-body">
+<h3 class="event-title">混沌创商院×杭州六小龙之群核科技游学</h3>
+<div class="event-meta"><span>杭州拱墅区矩阵国际（群核科技）</span><span>混沌创商院 · 群核科技</span></div>
+<p class="event-desc">「走进空间智能时代」——群核科技副总裁分享空间智能布局与应用。体验SpatialLM、Aholo等空间智能模型，玩转酷家乐AI解决方案。仅限混沌大课同学参加。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">仅限混沌同学</span></div>
+<a class="event-cta" href="https://party.hudongba.com/party/fjsa7.html" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-11-13"><span class="mon-lbl">6月</span><span class="day-lbl">11-13</span><span class="wk-lbl">周三-周五</span></time>
+<div class="event-body">
+<h3 class="event-title">2026中国（浙江）视觉智能产业应用展览会</h3>
+<div class="event-meta"><span>杭州国际博览中心</span><span>杭州华展展览有限公司</span></div>
+<p class="event-desc">「AI驱动·场景落地·产业升级」——展览面积20,000㎡，六大展示范围：AI+机器人、机器视觉与工业智能、AI城市与智慧场景、低空经济、具身智能、智能能源。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://www.zhanhuiquan.com/info/show/?id=233471" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-12"><span class="mon-lbl">6月</span><span class="day-lbl">12</span><span class="wk-lbl">周五</span></time>
+<div class="event-body">
+<h3 class="event-title">走进蚂蚁集团——AI Agent规模化落地实战｜AI碰撞会</h3>
+<div class="event-meta"><span>杭州蚂蚁集团A空间</span><span>OceanBase · 蚂蚁集团 · 亚马逊云科技</span></div>
+<p class="event-desc">聚焦AI Agent规模化落地四大关键：产品验证PMF、数据基建新范式、安全合规暗礁、VC视角融资真相。含圆桌碰撞与蚂蚁A空间展厅参观。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://open.oceanbase.com/activities/4924014" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-12-14"><span class="mon-lbl">6月</span><span class="day-lbl">12-14</span><span class="wk-lbl">周五-周日</span></time>
+<div class="event-body">
+<h3 class="event-title">2026工程机械行业科技节</h3>
+<div class="event-meta"><span>杭州临平区艺尚小镇</span><span>中国工程机械工业协会 · 浙大高端装备研究院</span></div>
+<p class="event-desc">「工程机械＋智能智造·机器人化·人工智能·新能源」——科技创新成果展示，涵盖整机产品、核心零部件、产业化项目。室内光地展位免费开放。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="http://www.cncma.org/article/22429" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-12-14"><span class="mon-lbl">6月</span><span class="day-lbl">12-14</span><span class="wk-lbl">周五-周日</span></time>
+<div class="event-body">
+<h3 class="event-title">TapTV Arena AI动画黑客松 · 杭州站「Urban Glitch」</h3>
+<div class="event-meta"><span>杭州西湖艺创小镇</span><span>TapNow · MiniEleph · WUHU动画人空间</span></div>
+<p class="event-desc">全球最大AI动画黑客松，36小时线下集中创作。招募100支队伍，总奖金池60万元，算力+现金投入超140万元。主题「都市异常」——都市真实场景融入超现实异常叙事。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费参赛</span> <span class="pill pill-hot">热门</span></div>
+<a class="event-cta" href="https://www.aitop100.cn/infomation/details/33855.html" target="_blank" rel="noopener">报名参加</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-13-14"><span class="mon-lbl">6月</span><span class="day-lbl">13-14</span><span class="wk-lbl">周六-周日</span></time>
+<div class="event-body">
+<h3 class="event-title">AI电商增长操盘营——2天1夜AI重构电商增长力</h3>
+<div class="event-meta"><span>杭州余杭区阿里钉钉园区</span><span>杭州跨境电子商务协会 · 至顶教育</span></div>
+<p class="event-desc">小班实训，覆盖AI电商顶层设计、智能体搭建、AI图像与视频生成实战、N8N自动化生产线。讲师为前淘宝教育副总经理，已培训2200+电商商家。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-paid">¥3,980</span></div>
+<a class="event-cta" href="http://hzcea.org.cn/article/5735545194702794" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-13"><span class="mon-lbl">6月</span><span class="day-lbl">13</span><span class="wk-lbl">周六</span></time>
+<div class="event-body">
+<h3 class="event-title">ADG杭州：从Vibe Coding到Agentic Engineering</h3>
+<div class="event-meta"><span>杭州余杭区未来科技城国际人才园</span><span>杭州ADG社区 · 字节跳动</span></div>
+<p class="event-desc">字节Trae × 火山Agent Plan驱动AI原生开发实践。三位嘉宾分享AI产品方法论、Vibe Coding实践与行业级产品解决方案。Workshop环节30分钟现场完成AI产品原型。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://4692488724490.huodongxing.com/event/5863819580500" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-14"><span class="mon-lbl">6月</span><span class="day-lbl">14</span><span class="wk-lbl">周日</span></time>
+<div class="event-body">
+<h3 class="event-title">AI创业达人秀｜Google Build with AI 杭州站第三场</h3>
+<div class="event-meta"><span>杭州拱墅区智慧信息产业园</span><span>杭州谷歌开发者社区（GDG）</span></div>
+<p class="event-desc">杭州GDG主办的AI创业主题活动。聚焦AI技术创业方向，提供项目展示、技术交流与资源对接平台。适合AI创业者、开发者及技术爱好者参与。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://hz.huodongxing.com/event/6862767322511" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art"><img src="https://wimg.huodongxing.com/logo/202605/6862767322511/825994876069330_v2.jpg@!wmlogo" alt="" loading="lazy" /></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-14"><span class="mon-lbl">6月</span><span class="day-lbl">14</span><span class="wk-lbl">周日</span></time>
+<div class="event-body">
+<h3 class="event-title">爱搜GEO主题沙龙：AI全域获客增长（杭州站）</h3>
+<div class="event-meta"><span>杭州余杭区浙富控股大厦</span><span>爱搜 · 抖查查</span></div>
+<p class="event-desc">聚焦AI搜索时代的全域获客方法论，涵盖GEO+DSO模型、抖音SEO与AI搜索优化、AI驱动的内容获客策略，适合创业者与增长负责人。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-paid">¥79起</span></div>
+<a class="event-cta" href="https://6123825679383.huodongxing.com/event/4861646670211" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-17"><span class="mon-lbl">6月</span><span class="day-lbl">17</span><span class="wk-lbl">周三</span></time>
+<div class="event-body">
+<h3 class="event-title">剧有引力 增长有戏——AI短剧出海实战沙龙</h3>
+<div class="event-meta"><span>杭州滨江区钱潮开元酒店</span><span>Nativex · 万兴科技 · 阿里云 · TikTok</span></div>
+<p class="event-desc">聚焦AI短剧出海全链路。万兴科技、阿里云、TikTok for Business等嘉宾分享AI创作实践、短剧工业化生产与全球化分发策略，含轻辩论互动环节。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://www.10100.com/hd/138755344" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-19-21"><span class="mon-lbl">6月</span><span class="day-lbl">19-21</span><span class="wk-lbl">周五-周日</span></time>
+<div class="event-body">
+<h3 class="event-title">进化酒馆黑客松·杭州站——超越迷宫，走向彼岸</h3>
+<div class="event-meta"><span>杭州（报名审核后通知）</span><span>EVOTAVERN 进化酒馆</span></div>
+<p class="event-desc">第三届Agent Hackathon，48小时基于EvoMap打造自进化AI Agent。三大赛道：A2A蜂群协作、深度个性化长记忆助理、垂类领域自进化。完全免费含餐饮。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span> <span class="pill pill-hot">热门</span></div>
+<a class="event-cta" href="https://news.qq.com/rain/a/20260605A04MNX00" target="_blank" rel="noopener">报名参加</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-21"><span class="mon-lbl">6月</span><span class="day-lbl">21</span><span class="wk-lbl">截止</span></time>
+<div class="event-body">
+<h3 class="event-title">「火山杯」Agent创新大赛 · 临平站</h3>
+<div class="event-meta"><span>杭州临平新城</span><span>临平区政府</span></div>
+<p class="event-desc">五大赛道（决策优化、降本增效、交互升级、合规风控、其他创新），面向开发者和创新团队。一等奖5000元、二等奖3000元、三等奖1000元及创意奖。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费参赛</span></div>
+<a class="event-cta" href="https://www.linping.gov.cn/col/col1229520432/art/2026/art_653cca86839b4b4b8b9e6c5923a19e6d.html" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-24-25"><span class="mon-lbl">6月</span><span class="day-lbl">24-25</span><span class="wk-lbl">周三-周四</span></time>
+<div class="event-body">
+<h3 class="event-title">2026 第三届具身人形机器人应用场景拓展大会</h3>
+<div class="event-meta"><span>杭州萧山区水博园大酒店</span><span>新战略移动机器人咨询</span></div>
+<p class="event-desc">聚焦具身人形机器人在工业、服务、特种等场景的落地应用。涵盖最新技术路径、场景案例分享与产业生态对接，面向机器人产业从业者与投资人。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://1104176580401.huodongxing.com/event/5856726773700" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-26-28"><span class="mon-lbl">6月</span><span class="day-lbl">26-28</span><span class="wk-lbl">周四-周六</span></time>
+<div class="event-body">
+<h3 class="event-title">首届世界中医药人工智能大会</h3>
+<div class="event-meta"><span>杭州拱墅区之江饭店</span><span>世界中医药学会联合会 · 浙江中医药大学</span></div>
+<p class="event-desc">「拥抱AI时代·中医药智愈未来」——涵盖AI+中医药数据建设、智能康复、数字教育、古籍数字化等多个分会场，构建中医药+AI千亿级产业生态。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-paid">¥1500起</span></div>
+<a class="event-cta" href="https://wfcms.daanjiankang.com/wfcms-m/#/gen-meet-home?meetUuid=f5f3bb5243d04c739e122d28b007a7d2" target="_blank" rel="noopener">注册参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-26-28"><span class="mon-lbl">6月</span><span class="day-lbl">26-28</span><span class="wk-lbl">周五-周日</span></time>
+<div class="event-body">
+<h3 class="event-title">AI时代信息资源管理与图书情报发展大会</h3>
+<div class="event-meta"><span>杭州电子科技大学</span><span>杭州电子科技大学</span></div>
+<p class="event-desc">探讨人工智能环境下信息资源管理与图书情报学科发展。面向图书馆学、情报学及相关学科的专家学者、研究生及从业人员，含研究生学术论坛。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://www.cnbksy.com/meeting/meetingInfo/M_39321" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-28"><span class="mon-lbl">6月</span><span class="day-lbl">28</span><span class="wk-lbl">周日</span></time>
+<div class="event-body">
+<h3 class="event-title">亚马逊云科技 UG Community 2026·Summer</h3>
+<div class="event-meta"><span>杭州（报名审核后通知）</span><span>亚马逊云科技 User Group</span></div>
+<p class="event-desc">「信号觉醒·在信息洪流中构建价值」——四大议题方向：AI出海、Agent & Data、超级个体（OPC）、开源。Builder社群年度夏季技术盛会。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="https://4023173718737.huodongxing.com/event/6857607994600" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<div class="month-hr"><span class="mon">2026年<em>7月</em></span><span class="rule"></span></div>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-2-3"><span class="mon-lbl">6月</span><span class="day-lbl">2-3</span><span class="wk-lbl">周四-周五</span></time>
+<div class="event-body">
+<h3 class="event-title">2026中国AI智能体大会（AgenticAICon）</h3>
+<div class="event-meta"><span>杭州君悦酒店（西湖区）</span><span>智东西 · 智猩猩</span></div>
+<p class="event-desc">「范式跃迁 重塑世界」——聚焦Agentic AI范式演进与生产力革新。70+嘉宾（阿里、美团、腾讯等），涵盖Coding Agent、企业级AI智能体等九大方向。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-paid">¥0-1698</span></div>
+<a class="event-cta" href="https://9324969747305.huodongxing.com/event/9859783144600" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-22-26"><span class="mon-lbl">6月</span><span class="day-lbl">22-26</span><span class="wk-lbl">周二-周六</span></time>
+<div class="event-body">
+<h3 class="event-title">AdventureX 2026 · 中国最大黑客松</h3>
+<div class="event-meta"><span>杭州（具体地址待公布）</span><span>AdventureX</span></div>
+<p class="event-desc">120小时极限创造，招募800名年轻创造者。总奖金100万元，食宿全包，出行补贴。Workshop+项目展会+闭幕音乐节。26岁以下青年优先。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费（含食宿）</span> <span class="pill pill-hot">热门</span></div>
+<a class="event-cta" href="https://adventure-x.org" target="_blank" rel="noopener">报名参加</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<div class="month-hr"><span class="mon">2026年<em>8月</em></span><span class="rule"></span></div>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-18-20"><span class="mon-lbl">6月</span><span class="day-lbl">18-20</span><span class="wk-lbl">周一-周三</span></time>
+<div class="event-body">
+<h3 class="event-title">AI Hangzhou 2026 杭州人工智能大会</h3>
+<div class="event-meta"><span>杭州国际博览中心</span><span>杭州人工智能大会组委会</span></div>
+<p class="event-desc">「全球智聚钱塘，共筑AI新篇章」——展览面积30,000㎡，预计35,000+专业观众。覆盖智能算法、算力基础设施、智能机器人、AI+行业应用、数字安防五大展区。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span></div>
+<a class="event-cta" href="http://business.china.com.cn/2026-05/07/content_43420785.shtml" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<div class="month-hr"><span class="mon">2026年<em>9月</em></span><span class="rule"></span></div>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-10-12"><span class="mon-lbl">6月</span><span class="day-lbl">10-12</span><span class="wk-lbl">周三-周五</span></time>
+<div class="event-body">
+<h3 class="event-title">杭州国际人工智能应用与机器人创新博览会</h3>
+<div class="event-meta"><span>杭州国际博览中心（萧山区）</span><span>浙江省人工智能学会</span></div>
+<p class="event-desc">「杭聚全球智·AI启新程」——展览面积20,000㎡，350+参展品牌，预计50,000人次。十大核心展区：具身智能、人形机器人、大模型、元宇宙、低空经济等。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费（业内）</span></div>
+<a class="event-cta" href="http://www.szfa.com/exhibit/202604/02/9306.html" target="_blank" rel="noopener">查看详情</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+</div><!-- /tab-ai -->
+<div class="tab-pane" id="tab-opc">
+<div class="month-hr"><span class="mon">2026年<em>6月</em></span><span class="rule"></span></div>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-16"><span class="mon-lbl">6月</span><span class="day-lbl">16</span><span class="wk-lbl">周二</span></time>
+<div class="event-body">
+<h3 class="event-title">壮大「耐心资本」陪跑AI时代创业——2026浙江省科技金融论坛</h3>
+<div class="event-meta"><span>杭州未来科技城学术交流中心</span><span>浙江省科技创新企业协会 · OPC生态圈</span></div>
+<p class="event-desc">聚焦AI时代创业与科技金融。含OPC专委会揭牌、浙江省OPC产业联盟成立、OPC社区发展大会闭门会。浙大原副校长黄先海、省创投协会秘书长顾斌等嘉宾出席。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-free">免费</span> <span class="pill pill-hot">热门</span></div>
+<a class="event-cta" href="https://cs.huodongxing.com/event/4860743945700" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+<article class="event">
+<time class="date-stamp" datetime="2026-06-27-29"><span class="mon-lbl">6月</span><span class="day-lbl">27-29</span><span class="wk-lbl">周六-周一</span></time>
+<div class="event-body">
+<h3 class="event-title">OPC一人公司OPD一人部门三天进化实战营（第二期）</h3>
+<div class="event-meta"><span>杭州萧山区钱江电气智联科创园</span><span>智能体来了集团 · OPC China</span></div>
+<p class="event-desc">三天全栈实战：Day 1跑通基建、Day 2灵魂配置（OpenClaw/Hermes Agent部署与自动化引擎配置）、Day 3业务落地。专为一人公司经营者与企业一人部门设计。</p>
+<div class="event-foot">
+<div class="pill-group"><span class="pill pill-paid">¥3,980</span></div>
+<a class="event-cta" href="https://huodongxing.com/event/8863633093511" target="_blank" rel="noopener">报名参会</a>
+</div></div>
+<figure class="card-art is-empty"></figure>
+</article>
+</div><!-- /tab-opc -->
+<footer class="colophon">
+<p>每日自动更新 · 数据来源：活动行、新华网、各主办方官网等</p>
+<p>最后更新：<strong>2026年6月6日</strong> · 共 <strong id="total-events">27</strong> 场活动</p>
+</footer>
+</div><!-- /page -->
+
+<script>
+(function() {
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panes = { ai: document.getElementById('tab-ai'), opc: document.getElementById('tab-opc') };
+  const statNum = document.getElementById('stat-num');
+  const statLabel = document.getElementById('stat-label');
+  function switchTab(name) {
+    tabs.forEach(b => b.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="'+name+'"]').classList.add('active');
+    Object.entries(panes).forEach(([k, el]) => el.classList.toggle('active', k === name));
+    const aiCount = document.querySelectorAll('#tab-ai .event').length;
+    const opcCount = document.querySelectorAll('#tab-opc .event').length;
+    const count = name === 'ai' ? aiCount : opcCount;
+    statNum.textContent = count;
+    statLabel.textContent = name === 'ai' ? 'AI' : 'OPC';
+  }
+  tabs.forEach(btn => { btn.addEventListener('click', function(){ switchTab(this.dataset.tab); }); });
+  document.querySelectorAll('.event').forEach(function(el,i){ el.style.animationDelay = (0.03*i)+'s'; });
+})();
 </script>
 </body>
 </html>
